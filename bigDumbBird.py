@@ -2,6 +2,7 @@ import xml.etree.ElementTree as et
 import sys
 sys.path.append ('/1vsCode/python/myOS')
 import myOS
+from icecream import ic
 
 class Schematic:
     def __init__ (self, file):
@@ -82,7 +83,49 @@ class Board:
         minY = min (Ys)
         maxY = max (Ys)
         return (maxX - minX, maxY - minY)
-                
+    
+    """ 'returnAsElements=False will return just the names instead of the etree elements """
+    def getAllSMDPackagesInUse (self, returnAsElements=False):
+        smdPackages = []
+        for package in self.getPackagesInUse ():
+            if package.find ('smd') != None:
+                if returnAsElements:
+                    smdPackages.append (package)
+                else:
+                    smdPackages.append (package.get ('name'))
+        return smdPackages
+    
+    """ 'returnAsElements=False will return just the names instead of the etree elements """
+    def getAllSMDPartsInUse (self, returnAsElements=False):
+        smdPackages = self.getAllSMDPackagesInUse ()
+        smdParts = []
+        for element in self.getElements ():
+            if element.get ('package') in smdPackages:
+                if returnAsElements:
+                    smdParts.append (element)
+                else:
+                    smdParts.append (element.get ('name'))
+        return smdParts
+    
+    def getTotalSMDPads (self):
+        parts = self.getAllSMDPartsInUse (returnAsElements=True)
+        packages = self.getAllSMDPackagesInUse (returnAsElements=True)
+        totalSMDPads = 0
+        for part in parts:
+            for package in packages:
+                if part.get ('package') == package.get ('name'):
+                    totalSMDPads += len (package.findall ('smd'))
+                    break
+        return totalSMDPads            
+    
+    def getTotalSMDArea (self):
+        parts = self.getAllSMDPartsInUse (returnAsElements=True)
+        packages = self.getAllSMDPackagesInUse (returnAsElements=True)
+        f = lambda p: float (p.get ('dx')) * float (p.get ('dy'))
+        areaPerPackage = {package.get ('name'): sum ([f (pad)]) for package in packages for pad in package.findall ('smd')}
+        totalSMDArea = sum ([areaPerPackage[part.get ('package')] for part in parts])
+        return totalSMDArea  
+    
     def save (self):
         self.tree.write (self.path, encoding='UTF-8', xml_declaration=True)
 
