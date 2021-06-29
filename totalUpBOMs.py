@@ -5,28 +5,25 @@ from icecream import ic
 import os
 
 bomFiles = []
-
+quantityPerBom = []
 while 1:
-    inp = input ('gimme file or type "done"')
-    if inp == 'done':
+    fileName = input ('gimme file or type "done"')
+    if fileName == 'done':
         break
     else:
-        bomFiles.append (inp)
-        
-quantitiedLines = []
-for bom in bomFiles:
-    with open (bom, 'r') as file:
-        lines = file.readlines ()
-    for line in lines:
-        if line[0] == ';':
-            quantitiedLines.append (line[1:])
+        numUnits = ic(int(input ('how many units?')))
+        with open (fileName, 'r') as file:
+            lines = list(filter(lambda line: line[0] == ';', file.readlines()))
+        bomFiles.append({'numUnits': numUnits, 'lines': lines})
+
 partDict = {}
-for line in quantitiedLines:
-    line = ic (line.strip ('\n').strip (' ').replace ('\t', '').split (';'))
-    if line[0] not in partDict.keys ():
-        partDict[line[0]] = {'package': line[1], 'quantity': int (line[2])}
-    else:
-        partDict[line[0]]['quantity'] += int (line[2])
+for bom in bomFiles:
+    for line in bom['lines']:
+        line = line.strip('\n').strip(' ').replace('\t', '').split(';')
+        if line[1] not in partDict.keys ():
+            partDict[line[1]] = {'package': line[2], 'quantity': int (line[3]) * bom['numUnits']}
+        else:
+            partDict[line[1]]['quantity'] += int (line[3]) * bom['numUnits']
 
 def assembleBom (bom, numUnits=1):
     longestStringLength = 0
@@ -42,10 +39,7 @@ def assembleBom (bom, numUnits=1):
     output = [f'{add ("Value")}{add ("Package")}{add ("Quantity")}\n']
     output += f'{add ("-----")}{add ("-------")}{add ("--------")}\n'
     for value,info in bom.items ():
-        if numUnits == 1:
-            output += f'{add (value)}{add (info["package"])}{add (str (ic (info["quantity"])))}'
-        elif numUnits > 1:
-            output += f'{add (f";{value};")}{add (info["package"] + ";")}{add (str (info["quantity"] * numUnits) + ";")}'
+        output += f'{add (f";{value};")}{add (info["package"] + ";")}{add (str (info["quantity"] * numUnits) + ";")}'
         output += '\n'
     return output
 

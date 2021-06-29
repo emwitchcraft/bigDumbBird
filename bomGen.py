@@ -1,3 +1,5 @@
+#change to where you want to save the BOM
+saveDirectory = '/users/machew/documents/eagle/boms'
 from icecream import ic
 import bigDumbBird
 import sys
@@ -9,28 +11,37 @@ if len (sys.argv) > 1:
 else:
     file = input ('gimme file:')
 smdOnly = input ('smd only? (y/n)')
-numUnits = int (input ('how many units?'))
 board = bigDumbBird.Board (file)
-
-savePath = f'{file[:file.rfind (".")]}SmdBOM.txt'
+name = os.path.basename (file)
+name = name[:name.rfind('.')]
+savePath = f'{saveDirectory}/{name}'
 bom = {}
 if smdOnly == 'y':
     parts = board.getAllSMDPartsInUse (returnAsElements=True)
-    savePath = f'{file[:file.rfind (".")]}SmdBOM.txt'
+    savePath = f'{savePath}SmdBOM.txt'
 elif smdOnly == 'n':
     parts = board.getElements ()
-    savePath = f'{file[:file.rind (".")]}BOM.txt'
+    savePath = f'{savePath}BOM.txt'
+    
+#total  
+missingValues = False
 for part in parts:
-    if part.get ('value') not in bom.keys ():
+    value = part.get('value').casefold()
+    if value == '':
+        print (f'{part.get("name")} has no value!')
+        missingValues = True
+    elif value not in bom.keys ():
         info = {'ids': [part.get ('name')], 'package': part.get ('package'), 'quantity': 1}
-        bom[part.get ('value')] = info
-    elif part.get ('value') in bom.keys ():
-        bom[part.get ('value')]['quantity'] += 1
-        bom[part.get('value')]['ids'].append (part.get ('name'))
+        bom[value] = info
+    elif value in bom.keys ():
+        bom[value]['quantity'] += 1
+        bom[value]['ids'].append (part.get ('name'))
 
+if missingValues:
+    input ()
 #tab = lambda t: t * '\t'
 
-def assembleBom (numUnits=1):
+def assembleBom ():
     longestStringLength = 0
     for value in bom.keys ():
         if len (value) > longestStringLength:
@@ -44,10 +55,7 @@ def assembleBom (numUnits=1):
     output = [f'{add ("Value")}{add ("Package")}{add ("Quantity")}{"IDs"}\n']
     output += f'{add ("-----")}{add ("-------")}{add ("--------")}{add ("----")}\n'
     for value,info in bom.items ():
-        if numUnits == 1:
-            output += f'{add (value)}{add (info["package"])}{add (str (ic (info["quantity"])))}'
-        elif numUnits > 1:
-            output += f'{add (f";{value};")}{add (info["package"] + ";")}{add (str (info["quantity"] * numUnits) + ";")}'
+        output += f'{add (f";{value};")}{add (info["package"] + ";")}{add (str (info["quantity"]) + ";")}'
         for id in info['ids']:
             output += f'{id},'
         output.reverse ()
@@ -57,10 +65,6 @@ def assembleBom (numUnits=1):
     return output
 
 bomLines = assembleBom ()
-bomLines += '\n\n'
-bomLines += f'for {numUnits} units:\n'
-bomLines += assembleBom (numUnits=numUnits)
 with open (savePath, 'w') as file:
     file.writelines (bomLines)
-    
 os.system (savePath)
