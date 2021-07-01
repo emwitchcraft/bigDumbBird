@@ -71,20 +71,29 @@ class Board:
         packages = [packages for library in self.getLibrariesInUse () for packages in library.find ('packages')]
         return packages
     
-    def getBoundingPerimeter (self):
-        wires = filter (lambda wire: wire.get ('layer') == '20', self.plain.findall ('wire'))
+    #returns everything on layer20 (dimension)
+    def getOutline (self):
+        return filter(lambda wire: wire.get('layer') == '20', self.plain.findall('wire'))
+    
+    def getBoundingCoordinates(self):
+        wires = self.getOutline()
         Xs = []
         Ys = []
         for wire in wires:
             Xs.extend ([float (wire.get ('x1')), float (wire.get ('x2'))])
             Ys.extend ([float (wire.get ('y1')), float (wire.get ('y2'))])
-        minX = min (Xs)
-        maxX = max (Xs)
-        minY = min (Ys)
-        maxY = max (Ys)
-        return (maxX - minX, maxY - minY)
+        bounds = {}
+        bounds['minX'] = min (Xs)
+        bounds['maxX'] = max (Xs)
+        bounds['minY'] = min (Ys)
+        bounds['maxY'] = max (Ys)
+        return bounds
+        
+    def getWidthXHeight (self):
+        bounds = self.getBoundingCoordinates()
+        return (bounds['maxX'] - bounds['minX'], bounds['maxY'] - bounds['minY'])
     
-    """ 'returnAsElements=False will return just the names instead of the etree elements """
+    """ 'returnAsElements=False will return just the names as strings instead of the full etree elements """
     def getAllSMDPackagesInUse (self, returnAsElements=False):
         smdPackages = []
         for package in self.getPackagesInUse ():
@@ -95,7 +104,7 @@ class Board:
                     smdPackages.append (package.get ('name'))
         return smdPackages
     
-    """ 'returnAsElements=False will return just the names instead of the etree elements """
+    """ 'returnAsElements=False will return just the names as strings instead of the full etree elements """
     def getAllSMDPartsInUse (self, returnAsElements=False):
         smdPackages = self.getAllSMDPackagesInUse ()
         smdParts = []
