@@ -15,7 +15,10 @@ scriptName = file[file.rfind ('/') + 1:file.rfind ('.')]
 fullPath = f'{ulpDir}{scriptName}.ulp'
 
 executionType = input ('execute as ulp or scr?')
-
+if executionType == 'ulp':
+    reloadFile = input('reload eagle file after execution? (y/n)')
+else:
+    reloadFile = 'n'
 ulp = 'string name;\n'
 ulp += 'if (board) board (b)\n'
 ulp += '{\n'
@@ -26,7 +29,7 @@ ulp += '{\n'
 ulp += '    name = s.name;\n'
 ulp += '}\n'
 ulp += f'system ("py {file} " + name);\n'
-if executionType == 'ulp':
+if executionType == 'ulp' and reloadFile == 'y':
     command = '"edit " + name;'
 elif executionType == 'scr':
     command = f'"script \'" + filesetext (name, "/{scriptName}.scr") + "\';";'
