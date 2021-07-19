@@ -83,15 +83,15 @@ class Board:
             Xs.extend ([float (wire.get ('x1')), float (wire.get ('x2'))])
             Ys.extend ([float (wire.get ('y1')), float (wire.get ('y2'))])
         bounds = {}
-        bounds['minX'] = min (Xs)
-        bounds['maxX'] = max (Xs)
-        bounds['minY'] = min (Ys)
-        bounds['maxY'] = max (Ys)
+        bounds['x0'] = min (Xs)
+        bounds['xf'] = max (Xs)
+        bounds['y0'] = min (Ys)
+        bounds['yf'] = max (Ys)
         return bounds
         
     def getWidthXHeight (self):
         bounds = self.getBoundingCoordinates()
-        return (bounds['maxX'] - bounds['minX'], bounds['maxY'] - bounds['minY'])
+        return (bounds['xf'] - bounds['x0'], bounds['yf'] - bounds['y0'])
     
     """ 'returnAsElements=False will return just the names as strings instead of the full etree elements """
     def getAllSMDPackagesInUse (self, returnAsElements=False):
@@ -146,7 +146,7 @@ class ScriptWriter:
         
     def __iadd__ (self, command):
         command = str (command)
-        self.commands.append (f'{command};\n')
+        self.commands.append (f'{command}\n')
         return self
     
     def save (self):
@@ -155,4 +155,11 @@ class ScriptWriter:
         with open (self.path, 'w') as file:
             file.writelines (self.commands)
     
+    def drawRectGroup (self, x0, xf, y0, yf):
+        command = f'group ({x0} {y0}) ({x0} {yf}) ({xf} {yf}) ({xf} {y0}) ({x0} {y0})\n'
+        self.commands += command
+    
+    def drawRect (self, x0, xf, y0, yf, layer):
+        self.commands += f'layer {layer}\n'
+        self.commands += f'line 0 ({x0} {y0}) ({x0} {yf}) ({xf} {yf}) ({xf} {y0}) ({x0} {y0})\n'
 

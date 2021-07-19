@@ -12,8 +12,8 @@ scr = bigDumbBird.ScriptWriter(file, 'boardToQ1')
 outline = board.getOutline()
 bc = ic(board.getBoundingCoordinates())
 
-shiftX = ic(-1 * bc['minX'])
-shiftY = ic(-1 * bc['minY'])
+shiftX = ic(-1 * bc['x0'])
+shiftY = ic(-1 * bc['y0'])
 
 scr += 'group all'
 scr += f'move (>0 0) ({shiftX} {shiftY})'

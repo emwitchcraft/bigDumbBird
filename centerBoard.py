@@ -11,16 +11,19 @@ scr = bigDumbBird.ScriptWriter(file, 'centerBoard')
 outline = board.getOutline()
 bc = board.getBoundingCoordinates()
 
-deltaX = bc['maxX'] - bc['minX']
-deltaY = bc['maxY'] - bc['minY']
+def getShiftXYToCenterBoard(bounds):
+    deltaX = bounds['xf'] - bounds['x0']
+    deltaY = bounds['yf'] - bounds['y0']
 
-centerX = bc['minX'] + (deltaX / 2)
-centerY = bc['minY'] + (deltaY / 2)
-shiftX = -1 * centerX
-shiftY = -1 * centerY
+    centerX = bounds['x0'] + (deltaX / 2)
+    centerY = bounds['y0'] + (deltaY / 2)
+    shiftX = -1 * centerX
+    shiftY = -1 * centerY
+    return shiftX,shiftY
 
+shifts = getShiftXYToCenterBoard(bc)
 #scr += 'write;'
 scr += 'group all;'
-scr += f'move (>0 0) ({shiftX} {shiftY});'
+scr += f'move (>0 0) ({shifts[0]} {shifts[1]});'
 
 scr.save()
