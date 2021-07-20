@@ -54,25 +54,28 @@ class Board:
         self.yourAreAChumpIfYouUseTheAutoRouter = self.board.find ('autorouter')
         self.elements = self.board.find ('elements')
         self.signals = self.board.find ('signals')
+    
+    def reloadBoard(self):
+        self.__init__(self.path)
         
-    def getElements (self):
+    def getElements(self):
         return self.elements.findall ('element')
         
-    def getLayers (self):
+    def getLayers(self):
         return self.layers.findall ('layer')
     
-    def getLibrariesInUse (self):
+    def getLibrariesInUse(self):
         return self.libraries.findall ('library')
     
-    def getSignals (self):
+    def getSignals(self):
         return self.signals.findall ('signal')
     
-    def getPackagesInUse (self):
+    def getPackagesInUse(self):
         packages = [packages for library in self.getLibrariesInUse () for packages in library.find ('packages')]
         return packages
     
     #returns everything on layer20 (dimension)
-    def getOutline (self):
+    def getOutline(self):
         return filter(lambda wire: wire.get('layer') == '20', self.plain.findall('wire'))
     
     def getBoundingCoordinates(self):
@@ -89,12 +92,12 @@ class Board:
         bounds['yf'] = max (Ys)
         return bounds
         
-    def getWidthXHeight (self):
+    def getWidthXHeight(self):
         bounds = self.getBoundingCoordinates()
         return (bounds['xf'] - bounds['x0'], bounds['yf'] - bounds['y0'])
     
     """ 'returnAsElements=False will return just the names as strings instead of the full etree elements """
-    def getAllSMDPackagesInUse (self, returnAsElements=False):
+    def getAllSMDPackagesInUse(self, returnAsElements=False):
         smdPackages = []
         for package in self.getPackagesInUse ():
             if package.find ('smd') != None:
@@ -105,7 +108,7 @@ class Board:
         return smdPackages
     
     """ 'returnAsElements=False will return just the names as strings instead of the full etree elements """
-    def getAllSMDPartsInUse (self, returnAsElements=False):
+    def getAllSMDPartsInUse(self, returnAsElements=False):
         smdPackages = self.getAllSMDPackagesInUse ()
         smdParts = []
         for element in self.getElements ():
@@ -116,7 +119,7 @@ class Board:
                     smdParts.append (element.get ('name'))
         return smdParts
     
-    def getTotalSMDPads (self):
+    def getTotalSMDPads(self):
         parts = self.getAllSMDPartsInUse (returnAsElements=True)
         packages = self.getAllSMDPackagesInUse (returnAsElements=True)
         totalSMDPads = 0
@@ -127,7 +130,7 @@ class Board:
                     break
         return totalSMDPads            
     
-    def getTotalSMDArea (self):
+    def getTotalSMDArea(self):
         parts = self.getAllSMDPartsInUse (returnAsElements=True)
         packages = self.getAllSMDPackagesInUse (returnAsElements=True)
         f = lambda p: float (p.get ('dx')) * float (p.get ('dy'))
@@ -135,31 +138,45 @@ class Board:
         totalSMDArea = sum ([areaPerPackage[part.get ('package')] for part in parts])
         return totalSMDArea  
     
-    def save (self):
+    def save(self):
         self.tree.write (self.path, encoding='UTF-8', xml_declaration=True)
 
 class ScriptWriter:
-    def __init__ (self, path, scrName):
+    def __init__(self, path, pythonProgramName):
         self.commands = []
-        self.path = f'{path[:path.rfind (".")]}/{scrName}.scr'
+        self.path = f'{path[:path.rfind (".")]}Scripts/{pythonProgramName}.scr'
         myOS.createIfNonExistent (self.path[:self.path.rfind ('/')])
         
-    def __iadd__ (self, command):
+    def __iadd__(self, command):
         command = str (command)
-        self.commands.append (f'{command}\n')
+        self.commands.append (f'{command};\n')
         return self
     
-    def save (self):
+    def save(self):
         myOS.createIfNonExistent (self.path[:self.path.rfind ('/')])
         self.commands.append ('write;')
         with open (self.path, 'w') as file:
             file.writelines (self.commands)
     
-    def drawRectGroup (self, x0, xf, y0, yf):
+    def drawRectGroup(self, x0=0, xf=0, y0=0, yf=0, bounds=None):
+        if bounds != None:
+            x0 = bounds['x0']
+            xf = bounds['xf']
+            y0 = bounds['y0']
+            yf = bounds['yf']
         command = f'group ({x0} {y0}) ({x0} {yf}) ({xf} {yf}) ({xf} {y0}) ({x0} {y0})\n'
         self.commands += command
     
-    def drawRect (self, x0, xf, y0, yf, layer):
+    def drawRect(self,layer, x0 = 0, xf = 0, y0 = 0, yf = 0, bounds=None):
         self.commands += f'layer {layer}\n'
+        if bounds != None:
+            x0 = bounds['x0']
+            xf = bounds['xf']
+            y0 = bounds['y0']
+            yf = bounds['yf']
         self.commands += f'line 0 ({x0} {y0}) ({x0} {yf}) ({xf} {yf}) ({xf} {y0}) ({x0} {y0})\n'
 
+    def ratsNest(self, ripUpPolygonsAfter=True):
+        self.commands.append('ratsnest;\n')
+        if ripUpPolygonsAfter:
+            self.commands.append('ripup @;\n')
