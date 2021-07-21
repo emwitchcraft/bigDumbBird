@@ -1,9 +1,8 @@
 import xml.etree.ElementTree as et
-import sys
-sys.path.append ('/1vsCode/python/myOS')
-import myOS
-from icecream import ic
+import inspect
+import os
 
+#TODO read grid units from file
 class Schematic:
     def __init__ (self, file):
         self.path = file
@@ -142,21 +141,33 @@ class Board:
         self.tree.write (self.path, encoding='UTF-8', xml_declaration=True)
 
 class ScriptWriter:
-    def __init__(self, path, pythonProgramName):
+    def __init__(self, eagleFile):
         self.commands = []
-        self.path = f'{path[:path.rfind (".")]}Scripts/{pythonProgramName}.scr'
-        myOS.createIfNonExistent (self.path[:self.path.rfind ('/')])
+        self.path = f'{eagleFile[:eagleFile.rfind (".")]}Scripts/{self.getScriptName()}.scr'
+        location = self.path[:self.path.rfind('/')]
+        if os.path.exists(location) != True:
+            os.makedirs(location)
         
     def __iadd__(self, command):
         command = str (command)
         self.commands.append (f'{command};\n')
         return self
     
+    def getScriptName(self):
+        name = os.path.splitext(os.path.basename(inspect.stack()[2].filename))[0]
+        return name
+    
+    #will get added to the bottom of py file for you if you forget
     def save(self):
-        myOS.createIfNonExistent (self.path[:self.path.rfind ('/')])
         self.commands.append ('write;')
         with open (self.path, 'w') as file:
             file.writelines (self.commands)
+    
+    def groupAll(self):
+        self.commands += 'group all;\n'
+    
+    def displayAll(self):
+        self.commands += 'display all;\n'
     
     def drawRectGroup(self, x0=0, xf=0, y0=0, yf=0, bounds=None):
         if bounds != None:

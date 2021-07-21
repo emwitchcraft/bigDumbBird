@@ -2,14 +2,6 @@ import bigDumbBird
 import sys
 from icecream import ic
 
-if len(sys.argv) > 1:
-    file = sys.argv[1]
-else:
-    file = input('gimme file:')
-
-board = bigDumbBird.Board(file)
-scr = bigDumbBird.ScriptWriter(file, 'shrinkPolygons')
-
 def shrink(board, scr):
     bounds = board.getBoundingCoordinates()
     signals = board.getSignals()
@@ -44,5 +36,15 @@ def shrink(board, scr):
                     scr += f'{baseCmd} ({newX} {newY})'
     return scr
 
-scr = shrink(board, scr)
-scr.save()
+if __name__ == '__main__':
+    if len(sys.argv) > 1:
+        file = sys.argv[1]
+    else:
+        file = input('gimme file:')
+
+    board = bigDumbBird.Board(file)
+    scr = bigDumbBird.ScriptWriter(file)
+
+
+    scr = shrink(board, scr)
+    scr.save()

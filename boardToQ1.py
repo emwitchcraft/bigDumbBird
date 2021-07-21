@@ -7,7 +7,7 @@ else:
     file = input('gimme file:')
 
 board = bigDumbBird.Board(file)
-scr = bigDumbBird.ScriptWriter(file, 'boardToQ1')
+scr = bigDumbBird.ScriptWriter(file)
 
 outline = board.getOutline()
 bc = ic(board.getBoundingCoordinates())

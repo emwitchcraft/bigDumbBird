@@ -1,24 +1,20 @@
-ulpDir = '/users/machew/documents/eagle/ulps/'#use '/' or '\\'
-
+ulpDir = '/users/machew/documents/eagle/ulps/'
 from icecream import ic
 import sys
-sys.path.append ('/1vsCode/python/myOS')
-import myOS
+import os
+bigDumbBirdDir = os.path.dirname(__file__)
 
 if len (sys.argv) > 1:
-    file = sys.argv[1]
+    pyFile = sys.argv[1]
 else:
-    file = input ('gimme file:')
+    pyFile = input ('gimme file:')
 
-file = file.replace('\\', '/')
-scriptName = file[file.rfind ('/') + 1:file.rfind ('.')]
+pyFile = pyFile.replace('\\', '/')
+scriptName = pyFile[pyFile.rfind ('/') + 1:pyFile.rfind ('.')]
 fullPath = f'{ulpDir}{scriptName}.ulp'
+with open(pyFile, 'r') as file:
+    pyFileContents = file.read()
 
-executionType = input ('execute as ulp or scr?')
-if executionType == 'ulp':
-    reloadFile = input('reload eagle file after execution? (y/n)')
-else:
-    reloadFile = 'n'
 ulp = 'string name;\n'
 ulp += 'if (board) board (b)\n'
 ulp += '{\n'
@@ -28,14 +24,19 @@ ulp += 'else if (schematic) schematic (s)\n'
 ulp += '{\n'
 ulp += '    name = s.name;\n'
 ulp += '}\n'
-ulp += f'system ("py {file} " + name);\n'
-if executionType == 'ulp' and reloadFile == 'y':
-    command = '"edit " + name;'
-elif executionType == 'scr':
-    command = f'"script \'" + filesetext (name, "/{scriptName}.scr") + "\';";'
-ulp += f'string cmd = {command}\n'
-ulp += 'exit (cmd);'
+if 'ScriptWriter' in pyFileContents:
+    ulp += f'system ("py {bigDumbBirdDir}/scriptSaveCheck.py {pyFile}");\n'
+ulp += f'system ("py {pyFile} " + name);\n'
 
-myOS.createIfNonExistent (ulpDir)
+if 'ScriptWriter' in pyFileContents:
+    command = f'"script \'" + filesetext (name, "Scripts/{scriptName}.scr") + "\';";'
+    ulp += f'string cmd = {command}\n'
+    ulp += 'exit (cmd);'
+else:
+    ulp += 'exit (0);'
+
+if os.path.exists(ulpDir) != True:
+    os.makedirs(ulpDir)
+
 with open (fullPath, 'w') as file:
     file.writelines (ulp)
