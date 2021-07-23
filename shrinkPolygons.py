@@ -5,16 +5,16 @@ from icecream import ic
 def shrink(board, scr):
     bounds = board.getBoundingCoordinates()
     signals = board.getSignals()
+    x0 = bounds['x0']
+    xf = bounds['xf']
+    y0 = bounds['y0']
+    yf = bounds['yf']
     for signal in signals:
         polygon = signal.find('polygon')
         if polygon != None:
             for vertex in polygon.findall('vertex'):
                 x = float(vertex.get('x'))
                 y = float(vertex.get('y'))
-                x0 = bounds['x0']
-                xf = bounds['xf']
-                y0 = bounds['y0']
-                yf = bounds['yf']
                 
                 newX = None
                 newY = None

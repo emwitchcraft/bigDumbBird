@@ -14,4 +14,4 @@ if 'ScriptWriter' in f:
         name = f[nameStart:f.find('=', nameStart)]
         name = name.strip()
         with open(pyFile, 'a') as file:
-            file.write(f'{name}.save()')
+            file.write(f'\n{name}.save()')

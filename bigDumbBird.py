@@ -139,6 +139,10 @@ class Board:
     
     def save(self):
         self.tree.write (self.path, encoding='UTF-8', xml_declaration=True)
+    
+    def saveBackup(self, suffix='BigDumbBackup'):
+        path = f'{os.path.splitext(self.path)[0]}{suffix}.brd'
+        self.tree.write(path, encoding='UTF-8', xml_declaration=True)
 
 class ScriptWriter:
     def __init__(self, eagleFile):

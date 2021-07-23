@@ -2,7 +2,7 @@ ulpDir = '/users/machew/documents/eagle/ulps/'
 from icecream import ic
 import sys
 import os
-bigDumbBirdDir = os.path.dirname(__file__)
+bigDumbBirdDir = os.path.dirname(__file__).replace('\\', '/')
 
 if len (sys.argv) > 1:
     pyFile = sys.argv[1]

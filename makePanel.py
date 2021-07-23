@@ -4,61 +4,97 @@ from icecream import ic
 from shrinkPolygons import shrink
 
 if len(sys.argv) > 1:
-    file = sys.argv[1]
+    dumbBirdFile = sys.argv[1]
 else:
-    file = input('gimme file:')
-
-#TODO hide layers when appropriate so the .scr runs faster
+    dumbBirdFile = input('gimme file:')
 
 #get board info
-board = bigDumbBird.Board(file)
-scr = bigDumbBird.ScriptWriter(file)
+board = bigDumbBird.Board(dumbBirdFile)
+board.saveBackup('MakePanelBackup')
+scr = bigDumbBird.ScriptWriter(dumbBirdFile)
+
+#center align all text if it isn't already
+scr += 'display none 25 26 27 28'
+scr.groupAll()
+scr += 'change align center (>0 0)'
+scr.displayAll()
+scr += 'write'
+
+#reload brd 
+#(something about the internal paste buffer fucks up 
+# keeping pads connected to their nets if you don't do a clean load)
+scr += f'edit {dumbBirdFile}'
 
 #get board metrics
 bounds = board.getBoundingCoordinates()
 width,height = board.getWidthXHeight()
 
-scr += 'grid mm finest'
 #duplicate names to _tnames and _bnames
-scr += 'layer 125 _tnames'
-scr += 'layer 126 _bnames'
-scr += 'display none tnames'
-scr.groupAll()
-scr += f'cut ({bounds["x0"]} {bounds["y0"]})'
-scr += f'paste ({bounds["x0"]} {bounds["y0"]})'
-scr += 'change layer _tnames (>0 0)'
-scr += 'display none bnames'
-scr.groupAll()
-scr += f'cut ({bounds["x0"]} {bounds["y0"]})'
-scr += f'paste ({bounds["x0"]} {bounds["y0"]})'
-scr += 'change layer _bnames (>0 0)'
-scr.displayAll()
+tnames = '25'
+bnames = '26'
+_tnames = '125'
+_bnames = '126'
+scr += f'layer {_tnames} _tnames'
+scr += f'set color_layer {_tnames} 5'
+scr += f'layer {_bnames} _bnames'
+scr += f'set color_layer {_bnames} 13'
+scr += f'display none'# {_tnames} {_bnames}'
+for element in board.getElements():
+    for attribute in element.findall('attribute'):
+        if attribute.get('name') == 'NAME':
+            name = element.get('name')
+            x = attribute.get('x')
+            y = attribute.get('y')
+            size = attribute.get('size')
+            ratio = attribute.get('ratio')
+            rot = attribute.get('rot')
+            if rot == None:
+                rot = 'r0'
+            align = attribute.get('align')
+            if attribute.get('layer') in [tnames, 'tplace', '21']:
+                layer = _tnames
+            elif attribute.get('layer') in [bnames, 'bplace', '22']:
+                layer = _bnames
+            scr += f'change layer {layer}'
+            scr += f'change size {size}'
+            scr += f'change ratio {20}'
+            if align != None:
+                scr += f'change align {align}'
+            scr += f'text \'{name}\' {rot} ({x} {y})'
 
 
 #shrink polygon pour planes to 0.5mm from board edges
+scr.displayAll()
 scr = shrink(board, scr)
+scr += 'display none'
 #paste table hole spacing
 gridX = 15
 gridY = 13
 #deets for mouseBite parts
 mouseBiteSpacing = 2
 mouseBiteHandleOffset = 0.25
-maxDistanceBetweenBites = 70
+maxDistanceBetweenBites = 75
 halfBiteWidth = 2.75
 outline = board.getOutline()
-minX = None
-maxX = None
 
 #determine sides of pcb
+#haven't tested it, but will probably break correct bite placement
+# if the sides consist of more than one segment
+minX = None
+maxX = None
 for line in outline:
     x0 = float(line.get('x1'))
     xf = float(line.get('x2'))
+    y = [float(line.get('y1')), float(line.get('y2'))]
     if x0 == xf:
-        y = [float(line.get('y1')), float(line.get('y2'))]
         if minX == None or maxX == None:
             minX = x0
             maxX = x0
-        elif x0 < minX:
+            leftY0 = min(y)
+            leftYf = max(y)
+            rightY0 = leftY0
+            rightYf = leftYf
+        if x0 < minX:
             minX = x0
             leftY0 = min(y)
             leftYf = max(y)
@@ -77,14 +113,14 @@ def addBites(x0, y0, yf, r):
         xp = x0 + mouseBiteHandleOffset
     scr += f'{addMouseBite} r{r} ({xp} {y0 + halfBiteWidth})'
     scr += f'{addMouseBite} r{r} ({xp} {yf - halfBiteWidth})'
-    delY = yf - y0
+    delY = (yf - halfBiteWidth) - (y0 + halfBiteWidth)
     if delY > maxDistanceBetweenBites:
         scr += f'{addMouseBite} r{r} ({xp} {y0 + (0.5 * delY)})'
 
+scr += 'display none 20'
 addBites(minX, leftY0, leftYf, 90)
 addBites(maxX, rightY0, rightYf, -90)
-
-#TODO error check if resulting panel size is within max size (304.8mmX304.8mm for me)
+scr += 'display none'
 #get panel matrix size from user and error check that it's a nonzero number
 columns = ''
 rows = ''
@@ -96,16 +132,30 @@ while rows == '':
     rows = int(input('how many rows?'))
     if rows == 0:
         rows = ''
-
-#calculate x-axis spacing for pcb to fit evenly between two tabs 
-#with at least 4mm on either side of the baord for the tabs and mousebites
-#results in a minimum tab width of 4mm and minimum 8mm b/t pcbs
-#tabSpacingX should end up being a multiple of gridX
-tabSpacingX = (int(width / gridX) + 1) * gridX
-cushionX = (tabSpacingX - width) / 2
-if cushionX < 4:
-    tabSpacingX = (int(width / gridX) + 2) * gridX
+        
+#calculate panel dimensions
+#error check if resulting panel size is within max size (304.8mmX304.8mm for me)
+#if not, subtract a board from the panel until it's small enough
+fitsInOven = False
+maxDimension = 304
+while fitsInOven == False:
+    #calculate x-axis spacing for pcb to fit evenly between two tabs 
+    #with at least 4mm on either side of the board for the tabs and mousebites
+    #results in a minimum tab width of 4mm and minimum 8mm b/t pcbs
+    #tabSpacingX should end up being a multiple of gridX
+    tabSpacingX = (int(width / gridX) + 1) * gridX
     cushionX = (tabSpacingX - width) / 2
+    if cushionX < 4:
+        tabSpacingX = (int(width / gridX) + 2) * gridX
+        cushionX = (tabSpacingX - width) / 2
+    totalWidth = (columns * tabSpacingX) + (2 * cushionX)
+    if totalWidth > maxDimension:
+        columns -= 1
+    totalHeight = (height * rows) + ((rows - 1) * mouseBiteSpacing)
+    if totalHeight > maxDimension:
+        rows -= 1
+    if totalWidth < maxDimension and totalHeight < maxDimension:
+        fitsInOven = True
 
 scr.displayAll()
 #unlock everything
@@ -124,12 +174,13 @@ for r in range (rows):
     for c in range (columns):
         if firstBoard == False:
             x = (c * tabSpacingX) + cushionX
-            y = (height * r) + ((r != 0) * mouseBiteSpacing)
+            y = (height * r) + (r * mouseBiteSpacing)
             scr += f'paste ({x} {y})'
         else:
             firstBoard = False
 
 #draws the panel tabs on dimension layer
+scr += 'display none 20'
 for c in range (columns + 1):
     gap = cushionX - mouseBiteSpacing
     center = c * tabSpacingX
@@ -139,11 +190,10 @@ for c in range (columns + 1):
                 x0=xL,
                 xf=xR,
                 y0=0,
-                yf=(height * rows) + ((rows - 1) * mouseBiteSpacing))
+                yf=totalHeight)
 
 #TODO check if 'toolingholes' library is in use and skip if it isn't
 #adds tooling holes to the four corners tabs
-totalHeight = ((height * rows) + ((rows - 1) * mouseBiteSpacing))
 topPostPoint = int(totalHeight / gridY) * gridY
 if (totalHeight - topPostPoint) < 3:
     topPostPoint -= gridY
@@ -158,12 +208,13 @@ scr += f'add toolinghole4.2mm ({rightMostPostPoint} {topPostPoint})'
     scr += f'delete {bite}' """
 #TODO skip next two commands if library isn't in use
 scr += 'add tablepostperimeter (0 0)'
-scr += 'add footbyfoot (0 0)'
 
 #align panel to quadrant 1
+scr.displayAll()
 scr += 'group all'
 scr += f'move (>0 0) ({cushionX - mouseBiteSpacing} 0)'
 scr.ratsNest()
+scr += 'add footbyfoot (0 0)'
 scr += 'write'
 scr += 'run cleanUpPanel'
 scr.save()
