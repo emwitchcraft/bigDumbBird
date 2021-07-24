@@ -1,12 +1,7 @@
 import bigDumbBird
 import sys
 
-
-if len(sys.argv) > 1:
-    dumbBirdFile = sys.argv[1]
-else:
-    dumbBirdFile = input('gimme file:')
-
+dumbBirdFile = sys.argv[1] if len(sys.argv) > 1 else input('gimme file:')
 scr = bigDumbBird.ScriptWriter(dumbBirdFile)
 scr += 'display none 25 26 27 28'
 scr.groupAll()

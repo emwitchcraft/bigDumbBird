@@ -1,6 +1,5 @@
 import bigDumbBird
 import sys
-from icecream import ic
 from shrinkPolygons import shrink
 
 if len(sys.argv) > 1:

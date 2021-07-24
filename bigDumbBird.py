@@ -30,7 +30,7 @@ class Schematic:
     def getSheets (self):
         return self.sheets.findall ('sheet')
     
-    def save (self):
+    def saveBird (self):
         self.tree.write (self.path, encoding='UTF-8')
     
 class Board:
@@ -70,14 +70,15 @@ class Board:
         return self.signals.findall ('signal')
     
     def getPackagesInUse(self):
-        packages = [packages for library in self.getLibrariesInUse () for packages in library.find ('packages')]
-        return packages
+        return [packages for library in self.getLibrariesInUse() 
+                for packages in library.find('packages')]
     
     #returns everything on layer20 (dimension)
     def getOutline(self):
         return filter(lambda wire: wire.get('layer') == '20', self.plain.findall('wire'))
     
     def getBoundingCoordinates(self):
+        # sourcery skip: inline-immediately-returned-variable, merge-dict-assign
         wires = self.getOutline()
         Xs = []
         Ys = []
@@ -134,10 +135,9 @@ class Board:
         packages = self.getAllSMDPackagesInUse (returnAsElements=True)
         f = lambda p: float (p.get ('dx')) * float (p.get ('dy'))
         areaPerPackage = {package.get ('name'): sum ([f (pad)]) for package in packages for pad in package.findall ('smd')}
-        totalSMDArea = sum ([areaPerPackage[part.get ('package')] for part in parts])
-        return totalSMDArea  
+        return sum(areaPerPackage[part.get ('package')] for part in parts)  
     
-    def save(self):
+    def saveBird(self):
         self.tree.write (self.path, encoding='UTF-8', xml_declaration=True)
     
     def saveBackup(self, suffix='BigDumbBackup'):
@@ -158,8 +158,7 @@ class ScriptWriter:
         return self
     
     def getScriptName(self):
-        name = os.path.splitext(os.path.basename(inspect.stack()[2].filename))[0]
-        return name
+        return os.path.splitext(os.path.basename(inspect.stack()[2].filename))[0]
     
     #will get added to the bottom of py file for you if you forget
     def save(self):

@@ -32,6 +32,9 @@ if 'ScriptWriter' in pyFileContents:
     command = f'"script \'" + filesetext (name, "Scripts/{scriptName}.scr") + "\';";'
     ulp += f'string cmd = {command}\n'
     ulp += 'exit (cmd);'
+elif '.saveBird()' in pyFileContents:
+    ulp += f'string cmd = "edit name;\n'
+    ulp += 'exit (cmd);'
 else:
     ulp += 'exit (0);'
 
