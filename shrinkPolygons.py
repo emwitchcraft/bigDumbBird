@@ -1,6 +1,5 @@
 import bigDumbBird
 import sys
-from icecream import ic
 
 def shrink(board, scr):
     bounds = board.getBoundingCoordinates()
@@ -15,7 +14,6 @@ def shrink(board, scr):
             for vertex in polygon.findall('vertex'):
                 x = float(vertex.get('x'))
                 y = float(vertex.get('y'))
-                
                 newX = None
                 newY = None
                 if x < x0:
@@ -26,22 +24,17 @@ def shrink(board, scr):
                     newY = y0 - 0.5
                 elif yf < y:
                     newY = yf + 0.5    
-                    #scr.drawRectGroup(bounds=bounds)
                 baseCmd = f'move ({x} {y})'
-                if newX != None and newY == None:
+                if newX is not None and newY is None:
                     scr += f'{baseCmd} ({newX} {y})'
-                elif newX == None and newY != None:
+                elif newX is None and newY is not None:
                     scr += f'{baseCmd} ({x} {newY})'
-                elif newX != None and newY != None:
+                elif newX is not None:
                     scr += f'{baseCmd} ({newX} {newY})'
     return scr
 
 if __name__ == '__main__':
-    if len(sys.argv) > 1:
-        file = sys.argv[1]
-    else:
-        file = input('gimme file:')
-
+    file = sys.argv[1] if len(sys.argv) > 1 else input('gimme file:')
     board = bigDumbBird.Board(file)
     scr = bigDumbBird.ScriptWriter(file)
 

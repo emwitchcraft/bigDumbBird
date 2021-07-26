@@ -4,11 +4,7 @@ import sys
 import os
 bigDumbBirdDir = os.path.dirname(__file__).replace('\\', '/')
 
-if len (sys.argv) > 1:
-    pyFile = sys.argv[1]
-else:
-    pyFile = input ('gimme file:')
-
+pyFile = sys.argv[1] if len (sys.argv) > 1 else input ('gimme file:')
 pyFile = pyFile.replace('\\', '/')
 scriptName = pyFile[pyFile.rfind ('/') + 1:pyFile.rfind ('.')]
 fullPath = f'{ulpDir}{scriptName}.ulp'

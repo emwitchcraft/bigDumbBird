@@ -1,11 +1,7 @@
 import bigDumbBird
 import sys
 
-if len(sys.argv) > 1:
-    file = sys.argv[1]
-else:
-    file = input('gimme file:')
-
+file = sys.argv[1] if len(sys.argv) > 1 else input('gimme file:')
 board = bigDumbBird.Board(file)
 scr = bigDumbBird.ScriptWriter(file)
 

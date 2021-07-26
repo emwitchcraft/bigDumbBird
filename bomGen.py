@@ -1,15 +1,10 @@
 #change to where you want to save the BOM
 saveDirectory = '/users/machew/documents/eagle/boms'
-from icecream import ic
 import bigDumbBird
 import sys
-sys.path.append ('/1vsCode/python/myOS')
 import os
 import sys
-if len (sys.argv) > 1:
-    file = sys.argv[1]
-else:
-    file = input ('gimme file:')
+file = sys.argv[1] if len (sys.argv) > 1 else input ('gimme file:')
 smdOnly = input ('smd only? (y/n)')
 board = bigDumbBird.Board (file)
 name = os.path.basename (file)
@@ -22,7 +17,7 @@ if smdOnly == 'y':
 elif smdOnly == 'n':
     parts = board.getElements ()
     savePath = f'{savePath}BOM.txt'
-    
+
 #total  
 missingValues = False
 for part in parts:
@@ -33,13 +28,12 @@ for part in parts:
     elif value not in bom.keys ():
         info = {'ids': [part.get ('name')], 'package': part.get ('package'), 'quantity': 1}
         bom[value] = info
-    elif value in bom.keys ():
+    else:
         bom[value]['quantity'] += 1
         bom[value]['ids'].append (part.get ('name'))
 
 if missingValues:
     input ()
-#tab = lambda t: t * '\t'
 
 def assembleBom ():
     longestStringLength = 0
