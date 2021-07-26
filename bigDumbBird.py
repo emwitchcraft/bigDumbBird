@@ -153,8 +153,7 @@ class ScriptWriter:
             os.makedirs(location)
         
     def __iadd__(self, command):
-        command = str (command)
-        self.commands.append (f'{command};\n')
+        self.commands.append (f'{str(command)};\n')
         return self
     
     def getScriptName(self):
