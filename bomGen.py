@@ -1,5 +1,5 @@
 #change to where you want to save the BOM
-saveDirectory = '/users/machew/documents/eagle/boms'
+saveDirectory = './your/path/here'
 import bigDumbBird
 import sys
 import os
