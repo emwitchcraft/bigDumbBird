@@ -1,10 +1,11 @@
+from dis import dis
 import xml.etree.ElementTree as et
 import inspect
 import os
 
 #TODO read grid units from file
 class Schematic:
-    def __init__ (self, file):
+    def __init__ (self, file, disableBackup=True):
         self.path = file
         self.tree = et.parse (file)
         self.root = self.tree.getroot ()
@@ -21,6 +22,9 @@ class Schematic:
         self.parts = self.schematic.find ('parts')
         self.sheets = self.schematic.find ('sheets')
         
+        if disableBackup is False:
+            self.saveBackup()
+        
     def getParts (self):
         return self.parts.findall ('part')
     
@@ -32,9 +36,16 @@ class Schematic:
     
     def saveBird (self):
         self.tree.write (self.path, encoding='UTF-8')
+        
+    def getScriptName(self):
+        return os.path.splitext(os.path.basename(inspect.stack()[2].filename))[0]
+        
+    def saveBackup(self):
+        path = f'{os.path.splitext(self.path)[0]}{self.getScriptName()}Backup.sch'
+        self.tree.write(path, encoding='UTF-8', xml_declaration=True)
     
 class Board:
-    def __init__ (self, file):
+    def __init__ (self, file, disableBackup=True):
         self.path = file
         self.tree = et.parse (file)
         self.root = self.tree.getroot ()
@@ -53,6 +64,9 @@ class Board:
         self.yourAreAChumpIfYouUseTheAutoRouter = self.board.find ('autorouter')
         self.elements = self.board.find ('elements')
         self.signals = self.board.find ('signals')
+        
+        if disableBackup is False:
+            self.saveBackup()
     
     def reloadBoard(self):
         self.__init__(self.path)
@@ -137,11 +151,14 @@ class Board:
         areaPerPackage = {package.get ('name'): sum ([f (pad)]) for package in packages for pad in package.findall ('smd')}
         return sum(areaPerPackage[part.get ('package')] for part in parts)  
     
+    def getScriptName(self):
+        return os.path.splitext(os.path.basename(inspect.stack()[2].filename))[0]
+    
     def saveBird(self):
         self.tree.write (self.path, encoding='UTF-8', xml_declaration=True)
     
-    def saveBackup(self, suffix='BigDumbBackup'):
-        path = f'{os.path.splitext(self.path)[0]}{suffix}.brd'
+    def saveBackup(self):
+        path = f'{os.path.splitext(self.path)[0]}{self.getScriptName()}Backup.brd'
         self.tree.write(path, encoding='UTF-8', xml_declaration=True)
 
 class ScriptWriter:
