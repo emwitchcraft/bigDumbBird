@@ -75,9 +75,6 @@ elif smdOnly == 'n':
     parts = board.getElements ()
     savePath = f'{savePath}BOM.txt'
     
-bom = buildBom(parts)
-formatSpacing = getFormatSpacing(bom)   
-formattedBom = formatBom(bom)
 with open (savePath, 'w') as file:
     file.writelines (formatBom(buildBom(parts)))
 os.system (savePath)
