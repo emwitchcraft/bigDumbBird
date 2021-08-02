@@ -1,30 +1,41 @@
-#change to where you want to save the BOM
-saveDirectory = '/users/machew/documents/eagle/boms'
-from posixpath import splitext
+
 import bigDumbBird
 import sys
 import os
 import sys
+import partsSourceList as psl
+import configparser
+c = configparser.ConfigParser()
+c.read('C:/1vsCode/python/bigDumbBird/bigDumbBird.config')
+saveDirectory = f'{c.get("paths", "eagle")}/boms'
 
 #bom = {value: {package: {ids:[], quantity}}}
-def buildBom(parts):
+def buildBom(parts, path):
     bom = {}
     missingValues = False
+    generate = input('generate parts sourcing list? (y/n)')
+    sourcingList = psl.PartsSourceList(path) if generate == 'y' else None
+    
     for part in parts:
-        value = part.get('value').casefold()
+        value = part.get('value')
         package = part.get('package')
         partId = part.get('name')
         if value == '':
             print (f'{part.get("name")} has no value!')
             missingValues = True
+            continue
         elif value not in bom:
             bom[value] = {package: {'ids': [partId], 'quantity': numUnits}}
         elif package not in bom[value]:
             bom[value][package] = {'ids': [partId], 'quantity': numUnits}
+            
         else:
             bom[value][package]['quantity'] += numUnits
             bom[value][package]['ids'].append (partId)
-
+            continue
+        if sourcingList is not None:
+            sourcingList.add(value, package)
+    sourcingList.save()
     if missingValues:
         input ()
     return bom
@@ -59,22 +70,25 @@ def formatBom(bom):
             output += '\n'
     return output
 
+try:
+    file = sys.argv[1] if len (sys.argv) > 1 else input ('gimme file:')
+    board = bigDumbBird.Board (file)
+    name = os.path.basename (file)
+    name = os.path.splitext(name)[0]
+    savePath = f'{saveDirectory}/{name}'
 
-file = sys.argv[1] if len (sys.argv) > 1 else input ('gimme file:')
-board = bigDumbBird.Board (file)
-name = os.path.basename (file)
-name = splitext(name)[0]
-savePath = f'{saveDirectory}/{name}'
-
-numUnits = int(input('how many units?'))
-smdOnly = input ('smd only? (y/n)')
-if smdOnly == 'y':
-    parts = board.getAllSMDPartsInUse (returnAsElements=True)
-    savePath = f'{savePath}SmdBOM.txt'
-elif smdOnly == 'n':
-    parts = board.getElements ()
-    savePath = f'{savePath}BOM.txt'
-    
-with open (savePath, 'w') as file:
-    file.writelines (formatBom(buildBom(parts)))
-os.system (savePath)
+    numUnits = int(input('how many units?'))
+    smdOnly = input ('smd only? (y/n)')
+    if smdOnly == 'y':
+        parts = board.getAllSMDPartsInUse (returnAsElements=True)
+        savePath = f'{savePath}SmdBOM.txt'
+    elif smdOnly == 'n':
+        parts = board.getElements ()
+        savePath = f'{savePath}BOM.txt'
+        
+    with open (savePath, 'w') as file:
+        file.writelines (formatBom(buildBom(parts, board.path)))
+    os.system (savePath)
+except Exception as e:
+    print(e)
+    input()

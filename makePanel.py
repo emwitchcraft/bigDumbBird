@@ -4,8 +4,8 @@ from shrinkPolygons import shrink
 
 dumbBirdFile = sys.argv[1] if len(sys.argv) > 1 else input('gimme file:')
 #get board info
-board = bigDumbBird.Board(dumbBirdFile)
-board.saveBackup('MakePanelBackup')
+board = bigDumbBird.Board(dumbBirdFile, disableBackup=False)
+#board.saveBackup('MakePanelBackup')
 scr = bigDumbBird.ScriptWriter(dumbBirdFile)
 
 #center align all text if it isn't already
