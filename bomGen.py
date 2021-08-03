@@ -1,13 +1,12 @@
-
 import bigDumbBird
 import sys
 import os
 import sys
 import partsSourceList as psl
-import configparser
-c = configparser.ConfigParser()
-c.read('C:/1vsCode/python/bigDumbBird/bigDumbBird.config')
-saveDirectory = f'{c.get("paths", "eagle")}/boms'
+
+saveDirectory = os.path.join(bigDumbBird.getEaglesNest(), 'boms')
+if os.path.exists(saveDirectory) != True:
+    os.makedirs(saveDirectory)
 
 #bom = {value: {package: {ids:[], quantity}}}
 def buildBom(parts, path):

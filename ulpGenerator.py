@@ -1,4 +1,4 @@
-ulpDir = '/users/machew/documents/eagle/ulps/'
+ulpDir = '/users/mmane/documents/eagle/ulps/'
 from icecream import ic
 import sys
 import os

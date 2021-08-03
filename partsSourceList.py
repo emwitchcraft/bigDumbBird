@@ -1,19 +1,18 @@
+import bigDumbBird as bdb
 import configparser
 import os
+import os.path as osp
 
 class PartsSourceList:
     def __init__(self, eagleFile):
-        c = configparser.ConfigParser()
-        c.read('C:/1vsCode/python/bigDumbBird/bigDumbBird.config')
-        eaglePath = c.get('paths', 'eagle')
-        splitPath = os.path.splitext(eagleFile)
-        name = os.path.basename(splitPath[0])
-        self.savePath = f'{eaglePath}/partsSourcing/{name}PartsSourcing.bdbpsl'
-        if os.path.exists(os.path.dirname(self.savePath)) != True:
-            os.makedirs(os.path.dirname(self.savePath))
+        name = osp.splitext(osp.basename(eagleFile))[0]
+        self.savePath = osp.join(bdb.getEaglesNest(), 'partsSourcing')
+        if os.path.exists(self.savePath) != True:
+            os.makedirs(self.savePath)
+        self.savePath = osp.join(self.savePath, f'{name}PartsSourcing.bdbpsl')
         self.parts = configparser.ConfigParser()
         self.parts[f'{name} Parts Sourcing'] = {}
-    
+        
     def add(self, part, package):
         self.parts[f'{part}|{package}'] = {'price': '', 'link': '', 'notes': ''}
         

@@ -1,7 +1,7 @@
-from dis import dis
 import xml.etree.ElementTree as et
 import inspect
 import os
+import configparser
 
 #TODO read grid units from file
 class Schematic:
@@ -210,3 +210,13 @@ class ScriptWriter:
         self.commands.append('ratsnest;\n')
         if ripUpPolygonsAfter:
             self.commands.append('ripup @;\n')
+
+#returns path to your bigDumbBird Directory
+def getBdbNest():
+    return  os.path.dirname(__file__)
+
+#returns the path to your EAGLE directory specified in bigDumbBird.config
+def getEaglesNest():
+    c = configparser.ConfigParser()
+    c.read(os.path.join(getBdbNest(), 'bigDumbBird.config'))
+    return c.get('paths', 'eagle')
