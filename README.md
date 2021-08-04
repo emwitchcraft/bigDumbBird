@@ -3,6 +3,8 @@ WIP
 
 Use python to write ulps for eagle instead of the trash built in language, but still launch them from within eagle via generated ulp.
 
+Put your eagle path (the one where your projects are, not where the executable is) in bigDumbBird.config
+
 Change first line of 'ulpGenerator.py' to your './eagle/ulps/' directory.
 
 Just drop your python file onto 'ulpGenerator.py' and it will generate a ulp file of the same name and place it in your ulp directory.
