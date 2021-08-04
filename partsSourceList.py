@@ -4,7 +4,8 @@ import os
 import os.path as osp
 
 class PartsSourceList:
-    def __init__(self, eagleFile):
+    #don't need eagleFile argument if you're only going to use the read function
+    def __init__(self, eagleFile=''):
         name = osp.splitext(osp.basename(eagleFile))[0]
         self.savePath = osp.join(bdb.getEaglesNest(), 'partsSourcing')
         if os.path.exists(self.savePath) != True:
@@ -20,5 +21,13 @@ class PartsSourceList:
         with open(self.savePath, 'w') as file:
             self.parts.write(file)
 
+def read(file):
+    c = configparser.ConfigParser()
+    c.read(file)
+    parts = {}
+    for i,part in enumerate(c.sections()):
+        if i > 0:
+            parts[part]['price'] = c.getfloat(part, 'price') if 'price' in part else 0
+    return parts
 
-    
+        
