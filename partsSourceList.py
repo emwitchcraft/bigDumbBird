@@ -2,6 +2,7 @@ import bigDumbBird as bdb
 import configparser
 import os
 import os.path as osp
+from icecream import ic
 
 class PartsSourceList:
     #don't need eagleFile argument if you're only going to use the read function
@@ -15,8 +16,8 @@ class PartsSourceList:
         self.parts = configparser.ConfigParser()
         self.parts[f'{name} Parts Sourcing'] = {}
         
-    def add(self, part, package):
-        self.parts[f'{part}|{package}'] = {'price': 0, 'link': '', 'over5mm': 'false', 'notes': ''}
+    def add(self, value, package):
+        self.parts[f'{value}|{package}'] = {'price': 0, 'link': '', 'over5mm': 'false', 'notes': ''}
         
     def save(self):
         with open(self.savePath, 'w') as file:
@@ -26,16 +27,22 @@ class PartsSourceListReader:
     def __init__(self, file):
         self.parts = configparser.ConfigParser()
         self.parts.read(file)
-        """ self.parts = {part: c.getfloat(part, 'price') 
-                        for i, part in enumerate(c.sections()) 
-                        if i > 0} """
-    def getPrice(self, part, package):
-        return self.parts.getfloat(f'{part}|{package}', 'price')
+        
+    def partInList(self, value, package):
+        return f'{value}|{package}' in self.parts.sections()
+        
+    def getPrice(self, value, package):
+        return self.parts.getfloat(f'{value}|{package}', 'price') \
+                if self.partInList(value, package) \
+                else 0
     
-    def isOver5mm(self, part, package):
-        return self.parts.getboolean(f'{part}|{package}', 'over5mm')
+    def isOver5mm(self, value, package):
+        return self.parts.getboolean(f'{value}|{package}', 'over5mm', fallback=False)
     
-    def getNumberOfParts(self):
+    def numComponentsOver5mm(self):
+        return sum(1 for part in self.parts.sections() if self.parts.getboolean(part, 'over5mm', fallback=False))
+    
+    def numOfUniqueComponents(self):
         return len(self.parts.sections()) - 1
     
     

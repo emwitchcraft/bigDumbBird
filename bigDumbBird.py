@@ -87,29 +87,6 @@ class Board:
         return [packages for library in self.getLibrariesInUse() 
                 for packages in library.find('packages')]
     
-    #returns everything on layer20 (dimension)
-    def getOutline(self):
-        return filter(lambda wire: wire.get('layer') == '20', self.plain.findall('wire'))
-    
-    def getBoundingCoordinates(self):
-        # sourcery skip: inline-immediately-returned-variable, merge-dict-assign
-        wires = self.getOutline()
-        Xs = []
-        Ys = []
-        for wire in wires:
-            Xs.extend ([float (wire.get ('x1')), float (wire.get ('x2'))])
-            Ys.extend ([float (wire.get ('y1')), float (wire.get ('y2'))])
-        bounds = {}
-        bounds['x0'] = min (Xs)
-        bounds['xf'] = max (Xs)
-        bounds['y0'] = min (Ys)
-        bounds['yf'] = max (Ys)
-        return bounds
-        
-    def getWidthXHeight(self):
-        bounds = self.getBoundingCoordinates()
-        return (bounds['xf'] - bounds['x0'], bounds['yf'] - bounds['y0'])
-    
     """ 'returnAsElements=False will return just the names as strings instead of the full etree elements """
     def getAllSMDPackagesInUse(self, returnAsElements=False):
         smdPackages = []
@@ -161,6 +138,29 @@ class Board:
         path = f'{os.path.splitext(self.path)[0]}{self.getScriptName()}Backup.brd'
         self.tree.write(path, encoding='UTF-8', xml_declaration=True)
 
+    #returns everything on layer20 (dimension)
+    def getOutline(self):
+        return filter(lambda wire: wire.get('layer') == '20', self.plain.findall('wire'))
+    
+    def getBoundingCoordinates(self):
+        # sourcery skip: inline-immediately-returned-variable, merge-dict-assign
+        wires = self.getOutline()
+        Xs = []
+        Ys = []
+        for wire in wires:
+            Xs.extend ([float (wire.get ('x1')), float (wire.get ('x2'))])
+            Ys.extend ([float (wire.get ('y1')), float (wire.get ('y2'))])
+        bounds = {}
+        bounds['x0'] = min (Xs)
+        bounds['xf'] = max (Xs)
+        bounds['y0'] = min (Ys)
+        bounds['yf'] = max (Ys)
+        return bounds
+        
+    def getWidthXHeight(self):
+        bounds = self.getBoundingCoordinates()
+        return (bounds['xf'] - bounds['x0'], bounds['yf'] - bounds['y0'])
+    
 class ScriptWriter:
     def __init__(self, eagleFile):
         self.commands = []
