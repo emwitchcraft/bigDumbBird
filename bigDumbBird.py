@@ -3,7 +3,7 @@ import inspect
 import os
 import configparser
 
-#TODO read grid units from file
+#TODO read grid units from file, currently all hardcoded dimensional numbers are mm
 class Schematic:
     def __init__ (self, file, disableBackup=True):
         self.path = file
@@ -64,6 +64,8 @@ class Board:
         self.yourAreAChumpIfYouUseTheAutoRouter = self.board.find ('autorouter')
         self.elements = self.board.find ('elements')
         self.signals = self.board.find ('signals')
+        
+        self.name = os.path.basename(os.path.splitext(file)[0])
         
         if disableBackup is False:
             self.saveBackup()
@@ -129,7 +131,7 @@ class Board:
         return sum(areaPerPackage[part.get ('package')] for part in parts)  
     
     def getScriptName(self):
-        return os.path.splitext(os.path.basename(inspect.stack()[2].filename))[0]
+        return os.path.splitext(os.path.basename(inspect.stack()[3].filename))[0]
     
     def saveBird(self):
         self.tree.write (self.path, encoding='UTF-8', xml_declaration=True)
@@ -160,6 +162,10 @@ class Board:
     def getWidthXHeight(self):
         bounds = self.getBoundingCoordinates()
         return (bounds['xf'] - bounds['x0'], bounds['yf'] - bounds['y0'])
+    
+    def getArea(self):
+        w,h = self.getWidthXHeight()
+        return w * h
     
 class ScriptWriter:
     def __init__(self, eagleFile):
@@ -197,7 +203,7 @@ class ScriptWriter:
         command = f'group ({x0} {y0}) ({x0} {yf}) ({xf} {yf}) ({xf} {y0}) ({x0} {y0})\n'
         self.commands += command
     
-    def drawRect(self,layer, x0 = 0, xf = 0, y0 = 0, yf = 0, bounds=None):
+    def drawRect(self,layer, x0=0, xf=0, y0=0, yf=0, bounds=None):
         self.commands += f'layer {layer}\n'
         if bounds != None:
             x0 = bounds['x0']

@@ -1,20 +1,34 @@
+import os
 import bigDumbBird
 import sys
 from shrinkPolygons import shrink
+import bigDumbBirdPathParser
 
 dumbBirdFile = sys.argv[1] if len(sys.argv) > 1 else input('gimme file:')
 #get board info
 board = bigDumbBird.Board(dumbBirdFile, disableBackup=False)
 #board.saveBackup('MakePanelBackup')
 scr = bigDumbBird.ScriptWriter(dumbBirdFile)
-
+bdbPath = bigDumbBirdPathParser.BigDumbBirdPathParser(dumbBirdFile)
 #center align all text if it isn't already
-scr += 'display none 25 26 27 28'
+""" scr += 'display none 25 26 27 28'
 scr.groupAll()
 scr += 'change align center (>0 0)'
 scr.displayAll()
-scr += 'write'
+scr += 'write' """
 
+#get panel matrix size from user and error check that it's a nonzero number
+columns = ''
+rows = ''
+while columns == '':
+    columns = int(input('how many columns?'))
+    if columns == 0:
+        columns = ''
+while rows == '':
+    rows = int(input('how many rows?'))
+    if rows == 0:
+        rows = ''
+        
 #reload brd 
 #(something about the internal paste buffer fucks up 
 # keeping pads connected to their nets if you don't do a clean load)
@@ -50,6 +64,7 @@ for element in board.getElements():
                 layer = _tnames
             elif attribute.get('layer') in [bnames, 'bplace', '22']:
                 layer = _bnames
+            else: continue
             scr += f'change layer {layer}'
             scr += f'change size {size}'
             scr += f'change ratio {20}'
@@ -119,17 +134,6 @@ scr += 'display none 20'
 addBites(minX, leftY0, leftYf, 90)
 addBites(maxX, rightY0, rightYf, -90)
 scr += 'display none'
-#get panel matrix size from user and error check that it's a nonzero number
-columns = ''
-rows = ''
-while columns == '':
-    columns = int(input('how many columns?'))
-    if columns == 0:
-        columns = ''
-while rows == '':
-    rows = int(input('how many rows?'))
-    if rows == 0:
-        rows = ''
 
 #calculate panel dimensions
 #error check if resulting panel size is within max size (304.8mmX304.8mm for me)
@@ -216,4 +220,12 @@ scr.ratsNest()
 scr += 'add footbyfoot (0 0)'
 scr += 'write'
 scr += 'run cleanUpPanel'
+scr += 'write'
+scr += 'run boardToQ1'
+newFile = f'{board.name}{columns}x{rows}.brd'
+scr += f'write {newFile}'
+for _ in range(len(scr.commands)):
+    scr += 'undo'
+scr += 'write'
+scr += f'edit {os.path.join(bigDumbBird.getEaglesNest(), bdbPath.getPath("talon", "version"), newFile)}'
 scr.save()
