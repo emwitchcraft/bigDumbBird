@@ -1,11 +1,14 @@
 import bigDumbBird
 import partsSourceList as psl
 import pnpDetails as pd
+import bigDumbBirdPathParser
 import sys
 import os
 from icecream import ic
+from pathlib import Path
 
 eagleFile = sys.argv[1] if len(sys.argv) > 1 else input('gimme file:')
+
 eagleName = os.path.splitext(os.path.basename(eagleFile))[0]
 pslName = eagleName[:eagleName.find('Panel')]
 project = os.path.split(os.path.split(eagleFile)[0])[1]
@@ -16,6 +19,13 @@ if os.path.exists(savePath) != True:
     os.makedirs(savePath)
 savePath = os.path.join(savePath, saveName)
 
+filePath = bigDumbBirdPathParser.BigDumbBirdPathParser(eagleFile)
+eagleName = filePath.nest['name']
+pslName = eagleName[:eagleName.find('Panel')]
+print(pslName)
+savePath = Path.joinpath(Path(bigDumbBird.getEaglesNest()), f'{filePath.getPathWithReplacement("talon", "name", "talon", "pnpQuotes")}Quote.txt')
+
+Path.mkdir(savePath.parent, parents=True, exist_ok=True)
 board = bigDumbBird.Board(eagleFile)
 
 partPricesPath = os.path.join(bigDumbBird.getEaglesNest(), 'partsSourcing', company, project, f'{pslName}.bdbpsl')
@@ -81,7 +91,7 @@ add('soldering', quote['numPanels'] * solderCost)
 panelArea = board.getArea()
 packagingMaterialCost = panelArea * 2 * pd.bubbleWrapPermm2
 add('packaging', packagingMaterialCost * quote['numPanels'])
-if input('any misc? (y/n)') == 'y':
+while input('any misc? (y/n)') == 'y':
     add(input('what for?'), float(input('how much?')))
 quote['total'] = round(totalCost, 2)
 quote['totalNoPcbs'] = round(totalCost - quote['pcbFabCosts'] - quote['ordering'], 2)
@@ -120,4 +130,4 @@ output += '(components + pcbFab + stencil)' if firstRun else '(components + pcbF
 if firstRun: output += '\n\n*only incurred on the first run of a board'
 with open(savePath, 'w') as file:
     file.write(output)
-os.system(savePath)
+os.system(savePath.__str__())

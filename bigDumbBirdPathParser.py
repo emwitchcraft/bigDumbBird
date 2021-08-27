@@ -1,5 +1,6 @@
 import pathlib
-
+from copy import deepcopy
+import bigDumbBird
 #./your/path/to/EAGLE/talon/company/category/design/version/name.ext
 #ex: ./users/me/documents/EAGLE/projects/adventure/pedals/dreamReaper/v1_4/dreamReaperV1_4Panel2X2.brd
 class BigDumbBirdPathParser:
@@ -28,6 +29,12 @@ class BigDumbBirdPathParser:
         path = pathlib.Path(*[self.nest[key] for key in getKeys if key != 'ext'])
         return path.with_suffix(self.nest['ext']) if stop == 'ext' else path
 
-
+    def getPathWithReplacement(self, start, stop, keyToReplace, replacement):
+        original = self.nest[keyToReplace]
+        self.nest[keyToReplace] = replacement
+        path = self.getPath(start, stop)
+        self.nest[keyToReplace] = original
+        return pathlib.Path.joinpath(pathlib.Path(bigDumbBird.getEaglesNest()), path)
+        
 
 

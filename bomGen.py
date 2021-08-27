@@ -7,7 +7,6 @@ import partsSourceList as psl
 saveDirectory = os.path.join(bigDumbBird.getEaglesNest(), 'boms')
 if os.path.exists(saveDirectory) != True:
     os.makedirs(saveDirectory)
-
 #bom = {value: {package: {ids:[], quantity}}}
 def buildBom(parts, path):
     bom = {}
@@ -69,25 +68,25 @@ def formatBom(bom):
             output += '\n'
     return output
 
-try:
-    file = sys.argv[1] if len (sys.argv) > 1 else input ('gimme file:')
-    board = bigDumbBird.Board (file)
-    name = os.path.basename (file)
-    name = os.path.splitext(name)[0]
-    savePath = f'{saveDirectory}/{name}'
+file = sys.argv[1] if len (sys.argv) > 1 else input ('gimme file:')
+board = bigDumbBird.Board (file)
+name = os.path.basename (file)
+name = os.path.splitext(name)[0]
+savePath = f'{saveDirectory}/{name}'
 
-    numUnits = int(input('how many units?'))
-    smdOnly = input ('smd only? (y/n)')
-    if smdOnly == 'y':
-        parts = board.getAllSMDPartsInUse (returnAsElements=True)
-        savePath = f'{savePath}SmdBOM.txt'
-    elif smdOnly == 'n':
-        parts = board.getElements ()
-        savePath = f'{savePath}BOM.txt'
-        
-    with open (savePath, 'w') as file:
-        file.writelines (formatBom(buildBom(parts, board.path)))
-    os.system (savePath)
-except Exception as e:
+numUnits = int(input('how many units?'))
+smdOnly = input ('smd only? (y/n)')
+if smdOnly == 'y':
+    parts = board.getAllSMDPartsInUse (returnAsElements=True)
+    savePath = f'{savePath}SmdBOM.txt'
+elif smdOnly == 'n':
+    parts = board.getElements ()
+    savePath = f'{savePath}BOM.txt'
+    
+with open (savePath, 'w') as file:
+    file.writelines (formatBom(buildBom(parts, board.path)))
+os.system (savePath)
+    
+""" except Exception as e:
     print(e)
-    input()
+    input() """

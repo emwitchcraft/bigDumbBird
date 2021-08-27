@@ -25,7 +25,7 @@ skipSignalsWithPlanePour = lambda signal: signal.find('polygon') is None
 
 airWires = filter(onlyAirWires, [wire for signal in filter(skipSignalsWithPlanePour, signals) for wire in signal.findall('wire')])
 
-maxDistance = 3.5
+maxDistance = float(input('max distance: '))
 for airWire in airWires:
     x0, y0, xf, yf = getCoords(airWire)
     if distance(x0, y0, xf, yf) < maxDistance:

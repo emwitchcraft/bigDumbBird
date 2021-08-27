@@ -55,7 +55,7 @@ for element in board.getElements():
             x = attribute.get('x')
             y = attribute.get('y')
             size = attribute.get('size')
-            ratio = attribute.get('ratio')
+            ratio = attribute.get('ratio') if attribute.get('ratio') is not None else 20
             rot = attribute.get('rot')
             if rot is None:
                 rot = 'r0'
@@ -67,7 +67,7 @@ for element in board.getElements():
             else: continue
             scr += f'change layer {layer}'
             scr += f'change size {size}'
-            scr += f'change ratio {20}'
+            scr += f'change ratio {ratio}'
             if align is not None:
                 scr += f'change align {align}'
             scr += f'text \'{name}\' {rot} ({x} {y})'
@@ -84,6 +84,7 @@ gridY = 13
 mouseBiteSpacing = 2
 mouseBiteHandleOffset = 0.25
 maxDistanceBetweenBites = 75
+minDistanceBetweenBites = 20
 halfBiteWidth = 2.75
 outline = board.getOutline()
 
@@ -124,11 +125,12 @@ def addBites(x0, y0, yf, rot):
     y0 += halfBiteWidth
     yf -= halfBiteWidth
     line = lambda y: f'{addMouseBite} r{rot} ({xp} {y})'
-    scr += line(y0)
-    scr += line(yf)
     delY = yf - y0
-    if delY > maxDistanceBetweenBites:
+    if delY > maxDistanceBetweenBites or delY < minDistanceBetweenBites:
         scr += line(y0 + (0.5 * delY))
+    if delY > minDistanceBetweenBites:
+        scr += line(y0)
+        scr += line(yf)
 
 scr += 'display none 20'
 addBites(minX, leftY0, leftYf, 90)
